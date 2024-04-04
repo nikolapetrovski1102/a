@@ -1,171 +1,196 @@
 #include <iostream>
-#include <stdlib.h>
 #include <string>
 using namespace std;
-struct jazol {
-int info;
-jazol *link;
+struct Jazol
+{
+string info;
+Jazol* next; //pokazhuvach kon sledbenikot
+Jazol* prev; //pokazhuvach kon prethodnikot
 };
-struct KLista {
-jazol *head;
-jazol *tail;
-void init(){
- head = tail = NULL;
- }
-void dodadiPrv(int x){
- jazol *nov = new jazol;
- nov->info = x;
- if(head == NULL){
- nov->link = nov;
- head = tail = nov;
- return;
- }
- nov->link = head;
- tail->link = nov;
+struct Lista
+{
+Jazol* head;
+Jazol* tail; //za da go pamtime krajot
+int brel;
+void init();
+void kreirajLista(int el);
+void dodadiPrv(string el);
+void dodadiPosleden(string el);
+void brishiPrv();
+void brishiPosleden();
+void brishiNaPozicija(int poz);
+void brishiLista();
+void rotate_clockwise(int n);
 
+void pechati();
+string citajNaPozicija(int poz);
+};
+void Lista::init()
+{
+ head = tail = NULL; //kreirame prazna lista, bez jazli
+ brel = 0;
+}
+void Lista::kreirajLista(int el)
+{
+Jazol* nov = new Jazol;
+ nov->info = el;
+ nov->next = nov->prev = nov; //jazolot pokazhuva kon sebe
+ tail = head = nov;
+ brel = 1;
+}
+void Lista::dodadiPrv(string el)
+{
+Jazol* nov = new Jazol;
+ nov->info = el;
+if (head == NULL) //ako listata ne sodrzhi elementi
+ {
+ nov->next = nov->prev = nov; //jazolot pokazhuva kon sebe
+ tail = head = nov;
+ }
+else
+ {
+ //formirame 4 vrski
+ nov->next = head;
+ head->prev = nov;
  head = nov;
+ tail->next = head;
+ head->prev = tail;
  }
-void dodadiPosleden(int x){
- jazol *nov = new jazol;
- nov->info = x;
- if(head == NULL){
- nov->link = nov;
- head = tail = nov;
- return;
+ brel++;
+}
+void Lista::dodadiPosleden(string el)
+{
+Jazol* nov = new Jazol;
+ nov->info = el;
+if (head == NULL) //ako listata ne sodrzhi elementi
+ {
+ nov->next = nov->prev = nov; //jazolot pokazhuva kon sebe
+ tail = head = nov;
  }
- nov->link = head;
- tail->link = nov;
+else
+ {
+ //formirame 4 vrski
+ tail->next = nov;
+ nov->prev = tail;
  tail = nov;
+ tail->next = head;
+ head->prev = tail;
  }
-void brishiPrv(){
- if(head == NULL){
- return;
- }
- if(head == tail){
+ brel++;
+}
+void Lista::brishiPrv()
+{
+if (head->next == head)
+ {
  delete head;
  head = tail = NULL;
- return;
  }
- jazol *pom = head;
- tail->link = head->link;
- head = head->link;
- delete pom;
+if (head != NULL)
+ {
+ tail->next = head->next; //krajot na listata pokazhuva kon vtoriot jazol
+
+ head->next->prev = tail; //vtoriot jazol pokazhuva kon posledniot
+ delete head; //osloboduvame memorija za posledniot jazol
+
+ head = tail->next;//pochetok stanuva vtoriot jazol
+ brel--;
  }
-void brisiPos(){
- if(head == NULL)
- return;
- if(head == tail){
+}
+void Lista::brishiPosleden()
+{
+if (head->next == head)
+ {
  delete head;
  head = tail = NULL;
- return;
  }
- jazol *pom = tail;
- jazol *dvizi = head;
- while(dvizi->link != tail)
- dvizi = dvizi->link;
- dvizi->link = head;
- tail = dvizi;
+if (head != NULL)
+ {
+ tail->prev->next = head; //pretposledniot jazol (tail->prev) pokazhuva kon
+ head->prev = tail->prev;//prviot pokazhuva kon pretposledniot jazol
+ delete tail; //osloboduvame memorija za prviot jazol
+ tail = head->prev; //kraj stanuva pretposledniot jazol
+ brel--;
+ }
+}
+void Lista::brishiNaPozicija(int poz) //prviot element e na pozicija 1
+{
+if (poz > 0 && poz <= brel)
+ {
+ if (poz == 1) brishiPrv();
+ else if (poz == brel) brishiPosleden();
+ else
+ {
+ Jazol* pom = head;
+ for (int i = 1; i < poz; i++)
+ pom = pom->next; //go dvizhime pokazhuvachot duri ne se
+ //pozicionira na jazolot
+ pom->next->prev = pom->prev;
+ pom->prev->next = pom->next;
  delete pom;
+ brel--;
  }
-void brishiLista(){
- while(head != NULL)
- brishiPrv();
  }
+}
+string Lista::citajNaPozicija(int poz) //prviot element e na pozicija 1
+{
+if (poz >= 0 && poz < brel)
+ {
+ Jazol* pom = head;
+ for (int i = 0; i < poz; i++) {
+ pom = pom->next;
+ }
+ return pom->info;
+ }
+}
+void Lista::brishiLista()
+{
+while (head != NULL)
+ brishiPosleden();
+}
+void Lista::pechati()
+{
+Jazol* pom = head;
+if (head != NULL)
+ do
+ {
+ cout << pom->info << '\t';
+ pom = pom->next;
+ } while (pom != head);
+else { cout << "Listata e prazna"; }
+ cout << endl;
+}
 
-void pechati(){
- if(head == NULL)
- return;
- jazol *dvizi = head;
- while(dvizi != tail){
- cout<<"|"<<dvizi->info<<"|->";
- dvizi = dvizi->link;
- }
- cout<<"|"<<tail->info<<"|"<<endl;
- }
-void brisiJazol(jazol *pom){
- if (pom == NULL)
- return;
- if(pom->link == NULL){
- return;
- }
- jazol *izol = pom->link;
- if (izol == head)
- brishiPrv();
- else if (izol == tail)
- brisiPos();
- else {
- pom->link = izol->link;
- delete izol;
- }
- }
-void duplirajJazol(jazol *pom){
- if(pom == head){
- dodadiPrv(head->info);
- return;
- }
- jazol *dvizi = head;
- while(dvizi->link!=pom){
- dvizi = dvizi->link;
- }
- jazol *nov = new jazol;
- nov->info = pom->info;
- nov->link = pom;
- dvizi->link = nov;
- }
-};
-
-    KLista promeni(KLista& l1, KLista& l2){
-        // Ni treba brojac za da ja izminvame pomalata lista
-        int brojac = 0;
-        KLista isti, neIsti;
-        isti.init();
-        neIsti.init();
-
-        // 10 2 5 7 13
-        // 5 2 7 7
-        // Ako brojacot vrti do 5 ke se sporeduva 13 so 5 posto e kruzna lista
-        // 10 
-        while (brojac != 4){
-            if (l1.head->info == l2.head->info){
-                isti.dodadiPosleden(l1.head->info); //duplicate
-            }
-            else{
-                neIsti.dodadiPosleden(l2.head->info);
-            }
-            isti.dodadiPosleden(l1.head->info); // keep
-            l1.head = l1.head->link;
-            l2.head = l2.head->link;
-            brojac++;
-        }
-
-        // se dodava poseldnata brojka sto ostanala
-        isti.dodadiPosleden(l1.head->info);
-
-        l1.brishiLista();
-        l2.brishiLista();
-
-        l1 = isti; // vrednostite na isti ke bidat vrednostite na l1
-        l2 = neIsti; // vrednostite na isti ke bidat vrednostite na l1
-
+void Lista::rotate_clockwise(int n)
+{
+    for (int i = 0; i < n; i++){
+        head = head->next;
+        tail = tail->next;
     }
+}
 
-int main(){
-KLista L1, L2;
-L1.init();
-L2.init();
-L1.dodadiPrv(10);
-L1.dodadiPosleden(2);
-L1.dodadiPosleden(5);
-L1.dodadiPosleden(7);
-L1.dodadiPosleden(13);
-L2.dodadiPosleden(7);
-L2.dodadiPrv(7);
-L2.dodadiPrv(2);
-L2.dodadiPrv(5);
-promeni(L1, L2);
-L1.pechati();
-L2.pechati();
-L1.brishiLista();
-L2.brishiLista();
-return 0;
+int main()
+{
+    Lista lista;
+    lista.init();
+    
+    lista.dodadiPosleden("a");
+    lista.dodadiPosleden("b");
+    lista.dodadiPosleden("c");
+    lista.dodadiPosleden("d");
+    lista.dodadiPosleden("e");
+    lista.dodadiPosleden("f");
+    lista.dodadiPosleden("g");
+    lista.dodadiPosleden("h");
+    
+    lista.pechati();
+    
+    int n;
+
+    cin >> n;
+    
+    lista.rotate_clockwise(n);
+    
+    lista.pechati();
+    
+    return 0;
 }
